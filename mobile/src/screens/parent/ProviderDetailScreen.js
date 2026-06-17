@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -13,10 +13,47 @@ import { Ionicons } from '@expo/vector-icons';
 import { colors, typography, spacing, borderRadius, shadows } from '../../theme';
 import { Button, Badge } from '../../components/common';
 import BudgetPickBadge from '../../components/search/BudgetPickBadge';
+import { favoritesApi } from '../../services/api';
 
 export default function ProviderDetailScreen({ route, navigation }) {
   const { provider } = route.params;
-  const [isFavorite, setIsFavorite] = useState(false);
+  const [isFavorite, setIsFavorite] = useState(provider.is_favorited || false);
+  const [favLoading, setFavLoading] = useState(false);
+
+  useEffect(() => {
+    checkFavoriteStatus();
+  }, []);
+
+  const checkFavoriteStatus = async () => {
+    try {
+      const response = await favoritesApi.list();
+      const favs = response.data?.favorites || response.data || [];
+      const isFav = favs.some((f) => f.id === provider.id);
+      setIsFavorite(isFav);
+    } catch (err) {
+      // Silently fail, use default
+    }
+  };
+
+  const toggleFavorite = async () => {
+    if (favLoading) return;
+    setFavLoading(true);
+    try {
+      if (isFavorite) {
+        await favoritesApi.remove(provider.id);
+        setIsFavorite(false);
+      } else {
+        await favoritesApi.add(provider.id);
+        setIsFavorite(true);
+      }
+    } catch (err) {
+      console.warn('Failed to toggle favorite:', err);
+      // Fall back to local toggle
+      setIsFavorite(!isFavorite);
+    } finally {
+      setFavLoading(false);
+    }
+  };
 
   const spots = provider.available_spots ?? 0;
   const spotType = spots >= 5 ? 'spots' : spots >= 1 ? 'few' : 'full';
@@ -49,7 +86,7 @@ export default function ProviderDetailScreen({ route, navigation }) {
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.favBtn}
-          onPress={() => setIsFavorite(!isFavorite)}
+          onPress={toggleFavorite}
         >
           <Ionicons
             name={isFavorite ? 'heart' : 'heart-outline'}
