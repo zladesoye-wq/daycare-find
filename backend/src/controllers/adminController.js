@@ -129,16 +129,22 @@ const getAnalytics = async (req, res, next) => {
 
     // 6. Budget Pick engagement (calculated from engagement_logs)
     const engagementRes = await db.query(`
-      SELECT 
-        COUNT(*) FILTER (WHERE is_budget_pick = true) as budget_engagement,
-        COUNT(*) as total_engagement
+      SELECT
+        COUNT(*) FILTER (WHERE is_budget_pick = true AND action_type = 'view') as budget_views,
+        COUNT(*) FILTER (WHERE is_budget_pick = true AND action_type = 'tap') as budget_taps,
+        COUNT(*) FILTER (WHERE action_type = 'view') as total_views,
+        COUNT(*) FILTER (WHERE action_type = 'tap') as total_taps
       FROM engagement_logs
     `);
-    const budgetEngagement = parseInt(engagementRes.rows[0].budget_engagement) || 0;
-    const totalEngagement = parseInt(engagementRes.rows[0].total_engagement) || 0;
-    const budgetPickEngagementRate = totalEngagement > 0 
-      ? (budgetEngagement / totalEngagement) * 100 
-      : 0;
+
+    const stats = engagementRes.rows[0];
+    const budgetViews = parseInt(stats.budget_views) || 0;
+    const budgetTaps = parseInt(stats.budget_taps) || 0;
+    const totalViews = parseInt(stats.total_views) || 0;
+    const totalTaps = parseInt(stats.total_taps) || 0;
+
+    const budgetPickViewRate = totalViews > 0 ? (budgetViews / totalViews) * 100 : 0;
+    const budgetPickTapRate = totalTaps > 0 ? (budgetTaps / totalTaps) * 100 : 0;
 
     res.json({
       success: true,
@@ -149,10 +155,15 @@ const getAnalytics = async (req, res, next) => {
         totalBookingsThisMonth,
         bookingStatusBreakdown,
         averageSearchRadius,
-        budgetPickEngagement: {
-          rate: budgetPickEngagementRate,
-          total_interactions: totalEngagement,
-          budget_pick_interactions: budgetEngagement
+        engagement: {
+          total_views: totalViews,
+          total_taps: totalTaps,
+          budget_pick_metrics: {
+            view_rate: budgetPickViewRate,
+            tap_rate: budgetPickTapRate,
+            budget_views: budgetViews,
+            budget_taps: budgetTaps
+          }
         }
       }
     });
