@@ -108,6 +108,16 @@ CREATE TABLE IF NOT EXISTS provider_subscriptions (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Engagement Logs Table for Analytics
+CREATE TABLE IF NOT EXISTS engagement_logs (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+    provider_id INTEGER REFERENCES providers(id) ON DELETE CASCADE,
+    action_type VARCHAR(20) NOT NULL CHECK (action_type IN ('view', 'tap')),
+    is_budget_pick BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Indices for search optimization
 CREATE INDEX IF NOT EXISTS idx_providers_lat_lng ON providers(lat, lng);
 CREATE INDEX IF NOT EXISTS idx_providers_is_active ON providers(is_active);
