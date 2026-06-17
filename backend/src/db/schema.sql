@@ -31,7 +31,7 @@ CREATE TABLE IF NOT EXISTS providers (
 -- Provider Availability Table
 CREATE TABLE IF NOT EXISTS provider_availability (
     id SERIAL PRIMARY KEY,
-    provider_id INTEGER REFERENCES providers(id) ON DELETE CASCADE,
+    provider_id INTEGER REFERENCES providers(id) ON DELETE CASCADE UNIQUE,
     total_spots INTEGER NOT NULL DEFAULT 0,
     available_spots INTEGER NOT NULL DEFAULT 0,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
