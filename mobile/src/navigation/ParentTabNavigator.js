@@ -2,8 +2,7 @@ import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing } from '../theme';
-
-import SearchScreen from '../screens/parent/SearchScreen';
+import ParentSearchStack from './ParentSearchStack';
 import FavoritesScreen from '../screens/parent/FavoritesScreen';
 import BookingsScreen from '../screens/parent/BookingsScreen';
 import ProfileScreen from '../screens/parent/ProfileScreen';
@@ -11,7 +10,7 @@ import ProfileScreen from '../screens/parent/ProfileScreen';
 const Tab = createBottomTabNavigator();
 
 const TAB_ICONS = {
-  Search: { focused: 'search', unfocused: 'search-outline' },
+  SearchTab: { focused: 'search', unfocused: 'search-outline' },
   Favorites: { focused: 'heart', unfocused: 'heart-outline' },
   Bookings: { focused: 'calendar', unfocused: 'calendar-outline' },
   Profile: { focused: 'person', unfocused: 'person-outline' },
@@ -43,7 +42,11 @@ export default function ParentTabNavigator() {
         },
       })}
     >
-      <Tab.Screen name="Search" component={SearchScreen} />
+      <Tab.Screen
+        name="SearchTab"
+        component={ParentSearchStack}
+        options={{ tabBarLabel: 'Search' }}
+      />
       <Tab.Screen name="Favorites" component={FavoritesScreen} />
       <Tab.Screen name="Bookings" component={BookingsScreen} />
       <Tab.Screen name="Profile" component={ProfileScreen} />

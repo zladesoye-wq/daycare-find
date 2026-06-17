@@ -35,7 +35,6 @@ api.interceptors.response.use(
     if (error.response) {
       const { status, data } = error.response;
       if (status === 401) {
-        // Token expired or invalid - could trigger logout here
         console.warn('Authentication error - token may be expired');
       }
       return Promise.reject({
@@ -65,13 +64,15 @@ export const authApi = {
   getProfile: () => api.get('/auth/profile'),
 };
 
-// Provider endpoints
+// Provider search & detail endpoints
 export const providerApi = {
-  list: (params) => api.get('/providers', { params }),
+  search: (params) => api.get('/providers', { params }),
   getById: (id) => api.get(`/providers/${id}`),
   update: (id, data) => api.put(`/providers/${id}`, data),
   updateAvailability: (id, data) =>
     api.put(`/providers/${id}/availability`, data),
+  updatePricing: (id, data) =>
+    api.put(`/providers/${id}/pricing`, data),
 };
 
 // Booking endpoints
@@ -87,6 +88,12 @@ export const favoritesApi = {
   list: () => api.get('/favorites'),
   add: (providerId) => api.post('/favorites', { providerId }),
   remove: (providerId) => api.delete(`/favorites/${providerId}`),
+};
+
+// Waitlist endpoints
+export const waitlistApi = {
+  join: (providerId) => api.post('/waitlist', { providerId }),
+  leave: (providerId) => api.delete(`/waitlist/${providerId}`),
 };
 
 export default api;
