@@ -1,0 +1,59 @@
+{
+  "expo": {
+    "name": "DaycareFind",
+    "slug": "daycarefind",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "splash": {
+      "backgroundColor": "#1A3557",
+      "resizeMode": "contain"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.daycarefind.app",
+      "config": {
+        "googleMapsApiKey": "YOUR_GOOGLE_MAPS_API_KEY"
+      },
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "DaycareFind needs your location to find nearby daycare providers."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#1A3557"
+      },
+      "package": "com.daycarefind.app",
+      "config": {
+        "googleMaps": {
+          "apiKey": "YOUR_GOOGLE_MAPS_API_KEY"
+        }
+      },
+      "permissions": ["ACCESS_FINE_LOCATION", "ACCESS_COARSE_LOCATION"]
+    },
+    "plugins": [
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "DaycareFind needs your location to find nearby daycare providers.",
+          "locationWhenInUsePermission": "DaycareFind needs your location to find nearby daycare providers."
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification-icon.png",
+          "color": "#1A3557"
+        }
+      ]
+    ],
+    "extra": {
+      "apiBaseUrl": "http://localhost:3000/api",
+      "eas": {
+        "projectId": "your-project-id"
+      }
+    }
+  }
+}

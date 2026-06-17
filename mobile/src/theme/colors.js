@@ -1,0 +1,25 @@
+export const colors = {
+  primary: '#1A3557',       // Navy
+  accent: '#2ECC8A',        // Mint
+  white: '#FFFFFF',
+  lightGray: '#F5F5F5',
+  mediumGray: '#E0E0E0',
+  darkGray: '#999999',
+  textDark: '#333333',
+  textMedium: '#666666',
+  textLight: '#999999',
+  error: '#E74C3C',
+  warning: '#F39C12',
+  success: '#27AE60',
+  background: '#F5F5F5',
+  card: '#FFFFFF',
+  border: '#E8E8E8',
+  overlay: 'rgba(0, 0, 0, 0.5)',
+  tabActive: '#2ECC8A',
+  tabInactive: '#FFFFFF',
+  tabBarBg: '#1A3557',
+  budgetPickGreen: '#2ECC8A',
+  spotsGreen: '#27AE60',
+  spotsYellow: '#F39C12',
+  spotsRed: '#E74C3C',
+};
