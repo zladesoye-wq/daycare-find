@@ -10,12 +10,14 @@ import {
   Dimensions,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useFocusEffect } from '@react-navigation/native';
 import MapView, { Marker, Callout } from 'react-native-maps';
 import { colors, typography, spacing, borderRadius } from '../../theme';
 import { LoadingSpinner, EmptyState } from '../../components/common';
+import NotificationBell from '../../components/common/NotificationBell';
 import FilterBar from '../../components/search/FilterBar';
 import ProviderCard from '../../components/search/ProviderCard';
-import { providerApi } from '../../services/api';
+import { providerApi, notificationApi } from '../../services/api';
 import { getCurrentLocation } from '../../services/location';
 import { useAuth } from '../../context/AuthContext';
 
@@ -39,6 +41,7 @@ export default function SearchScreen({ navigation }) {
   const [showMap, setShowMap] = useState(false);
   const [userLocation, setUserLocation] = useState(null);
   const [favorites, setFavorites] = useState(new Set());
+  const [unreadCount, setUnreadCount] = useState(0);
   const mapRef = useRef(null);
 
   // Get user location on mount
@@ -60,6 +63,20 @@ export default function SearchScreen({ navigation }) {
   useEffect(() => {
     fetchProviders();
   }, [filters]);
+
+  // Fetch unread notifications count on focus
+  useFocusEffect(
+    useCallback(() => {
+      (async () => {
+        try {
+          const res = await notificationApi.list({ limit: 1 });
+          setUnreadCount(res.data?.unread || 0);
+        } catch (err) {
+          // Silently fail
+        }
+      })();
+    }, [])
+  );
 
   const fetchProviders = async () => {
     try {
@@ -223,6 +240,10 @@ export default function SearchScreen({ navigation }) {
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Find Daycare</Text>
+        <NotificationBell
+          onPress={() => navigation.navigate('NotificationsList')}
+          unreadCount={unreadCount}
+        />
       </View>
 
       {/* Filter Bar */}
@@ -355,6 +376,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
     paddingTop: spacing.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
   headerTitle: {
     ...typography.h3,

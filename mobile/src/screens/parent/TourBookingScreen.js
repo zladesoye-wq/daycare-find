@@ -12,6 +12,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { colors, typography, spacing, borderRadius, shadows } from '../../theme';
 import { Button, Input, LoadingSpinner } from '../../components/common';
 import { bookingApi } from '../../services/api';
+import { scheduleTourReminder } from '../../services/notifications';
 
 const TIME_SLOTS = [
   { id: 'morning', label: 'Morning', time: '9:00 AM - 11:00 AM', icon: 'sunny' },
@@ -89,6 +90,8 @@ export default function TourBookingScreen({ route, navigation }) {
         notes,
         status: 'pending',
       });
+      // Schedule 24h tour reminder notification
+      await scheduleTourReminder(data.id, providerName, selectedDate, slot.time);
     } catch (err) {
       console.warn('Booking failed:', err);
       // Fallback: show confirmation with mock data
@@ -100,6 +103,7 @@ export default function TourBookingScreen({ route, navigation }) {
         notes,
         status: 'pending',
       });
+      await scheduleTourReminder('mock-' + Date.now(), providerName, selectedDate, slot.time);
     } finally {
       setLoading(false);
     }

@@ -1,14 +1,12 @@
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import SearchScreen from '../screens/parent/SearchScreen';
-import ProviderDetailScreen from '../screens/parent/ProviderDetailScreen';
-import TourBookingScreen from '../screens/parent/TourBookingScreen';
+import ProviderTabNavigator from './ProviderTabNavigator';
 import NotificationsScreen from '../screens/parent/NotificationsScreen';
 import { colors } from '../theme';
 
 const Stack = createNativeStackNavigator();
 
-export default function ParentSearchStack() {
+export default function ProviderRootStack() {
   return (
     <Stack.Navigator
       screenOptions={{
@@ -17,9 +15,7 @@ export default function ParentSearchStack() {
         animation: 'slide_from_right',
       }}
     >
-      <Stack.Screen name="SearchMain" component={SearchScreen} />
-      <Stack.Screen name="ProviderDetail" component={ProviderDetailScreen} />
-      <Stack.Screen name="TourBooking" component={TourBookingScreen} />
+      <Stack.Screen name="ProviderTabs" component={ProviderTabNavigator} />
       <Stack.Screen name="NotificationsList" component={NotificationsScreen} />
     </Stack.Navigator>
   );

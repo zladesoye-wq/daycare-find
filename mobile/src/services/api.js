@@ -96,4 +96,12 @@ export const waitlistApi = {
   leave: (providerId) => api.delete(`/waitlist/${providerId}`),
 };
 
+// Notification endpoints
+export const notificationApi = {
+  list: (params) => api.get('/notifications', { params }),
+  markAsRead: (id) => api.put(`/notifications/${id}/read`),
+  markAllAsRead: () => api.put('/notifications/read-all'),
+  registerPushToken: (pushToken) => api.post('/notifications/register-push', { pushToken }),
+};
+
 export default api;
