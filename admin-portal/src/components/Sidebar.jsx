@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { 
   LayoutDashboard, 
@@ -7,12 +7,15 @@ import {
   CalendarCheck, 
   CreditCard, 
   LogOut,
-  MapPin
+  MapPin,
+  Menu,
+  X
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import './Sidebar.css';
 
 const Sidebar = () => {
+  const [isOpen, setIsOpen] = useState(false);
   const { logout } = useAuth();
   const navigate = useNavigate();
 
@@ -29,36 +32,47 @@ const Sidebar = () => {
     { name: 'Subscriptions', path: '/subscriptions', icon: <CreditCard size={20} /> },
   ];
 
+  const toggleSidebar = () => setIsOpen(!isOpen);
+
   return (
-    <aside className="sidebar">
-      <div className="sidebar-header">
-        <div className="logo">
-          <MapPin className="logo-icon" />
-          <span>DaycareFind Admin</span>
+    <>
+      <button className="mobile-toggle" onClick={toggleSidebar}>
+        {isOpen ? <X size={24} /> : <Menu size={24} />}
+      </button>
+
+      <aside className={`sidebar ${isOpen ? 'open' : ''}`}>
+        <div className="sidebar-header">
+          <div className="logo">
+            <MapPin className="logo-icon" />
+            <span>DaycareFind Admin</span>
+          </div>
         </div>
-      </div>
-      <nav className="sidebar-nav">
-        <ul>
-          {navItems.map((item) => (
-            <li key={item.path}>
-              <NavLink 
-                to={item.path} 
-                className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}
-              >
-                {item.icon}
-                <span>{item.name}</span>
-              </NavLink>
-            </li>
-          ))}
-        </ul>
-      </nav>
-      <div className="sidebar-footer">
-        <button onClick={handleLogout} className="logout-btn">
-          <LogOut size={20} />
-          <span>Logout</span>
-        </button>
-      </div>
-    </aside>
+        <nav className="sidebar-nav">
+          <ul>
+            {navItems.map((item) => (
+              <li key={item.path}>
+                <NavLink 
+                  to={item.path} 
+                  className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}
+                  onClick={() => setIsOpen(false)}
+                >
+                  {item.icon}
+                  <span>{item.name}</span>
+                </NavLink>
+              </li>
+            ))}
+          </ul>
+        </nav>
+        <div className="sidebar-footer">
+          <button onClick={handleLogout} className="logout-btn">
+            <LogOut size={20} />
+            <span>Logout</span>
+          </button>
+        </div>
+      </aside>
+
+      {isOpen && <div className="sidebar-overlay" onClick={toggleSidebar}></div>}
+    </>
   );
 };
 
