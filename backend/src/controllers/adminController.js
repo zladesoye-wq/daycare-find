@@ -129,16 +129,22 @@ const getAnalytics = async (req, res, next) => {
 
     // 6. Budget Pick engagement (calculated from engagement_logs)
     const engagementRes = await db.query(`
-      SELECT 
-        COUNT(*) FILTER (WHERE is_budget_pick = true) as budget_engagement,
-        COUNT(*) as total_engagement
+      SELECT
+        COUNT(*) FILTER (WHERE is_budget_pick = true AND action_type = 'view') as budget_views,
+        COUNT(*) FILTER (WHERE is_budget_pick = true AND action_type = 'tap') as budget_taps,
+        COUNT(*) FILTER (WHERE action_type = 'view') as total_views,
+        COUNT(*) FILTER (WHERE action_type = 'tap') as total_taps
       FROM engagement_logs
     `);
-    const budgetEngagement = parseInt(engagementRes.rows[0].budget_engagement) || 0;
-    const totalEngagement = parseInt(engagementRes.rows[0].total_engagement) || 0;
-    const budgetPickEngagementRate = totalEngagement > 0 
-      ? (budgetEngagement / totalEngagement) * 100 
-      : 0;
+
+    const stats = engagementRes.rows[0];
+    const budgetViews = parseInt(stats.budget_views) || 0;
+    const budgetTaps = parseInt(stats.budget_taps) || 0;
+    const totalViews = parseInt(stats.total_views) || 0;
+    const totalTaps = parseInt(stats.total_taps) || 0;
+
+    const budgetPickViewRate = totalViews > 0 ? (budgetViews / totalViews) * 100 : 0;
+    const budgetPickTapRate = totalTaps > 0 ? (budgetTaps / totalTaps) * 100 : 0;
 
     res.json({
       success: true,
@@ -149,10 +155,15 @@ const getAnalytics = async (req, res, next) => {
         totalBookingsThisMonth,
         bookingStatusBreakdown,
         averageSearchRadius,
-        budgetPickEngagement: {
-          rate: budgetPickEngagementRate,
-          total_interactions: totalEngagement,
-          budget_pick_interactions: budgetEngagement
+        engagement: {
+          total_views: totalViews,
+          total_taps: totalTaps,
+          budget_pick_metrics: {
+            view_rate: budgetPickViewRate,
+            tap_rate: budgetPickTapRate,
+            budget_views: budgetViews,
+            budget_taps: budgetTaps
+          }
         }
       }
     });
@@ -188,9 +199,165 @@ const deleteProvider = async (req, res, next) => {
   }
 };
 
+/**
+ * @desc    Get all parents with details
+ * @route   GET /api/admin/parents
+ * @access  Private/Admin
+ */
+const getParents = async (req, res, next) => {
+  try {
+    const { page = 1, limit = 10, search = '' } = req.query;
+    const offset = (page - 1) * limit;
+
+    let query = `
+      SELECT 
+        u.id, u.name, u.email, u.phone, u.created_at,
+        COUNT(tb.id) as total_bookings
+      FROM users u
+      LEFT JOIN tour_bookings tb ON u.id = tb.parent_id
+      WHERE u.role = 'parent'
+    `;
+
+    const queryParams = [];
+    if (search) {
+      query += ` AND (u.name ILIKE $1 OR u.email ILIKE $1)`;
+      queryParams.push(`%${search}%`);
+    }
+
+    query += ` GROUP BY u.id ORDER BY u.created_at DESC LIMIT ${queryParams.length + 1} OFFSET ${queryParams.length + 2}`;
+    queryParams.push(limit, offset);
+
+    const result = await db.query(query, queryParams);
+
+    // Get total count for pagination
+    let countQuery = "SELECT COUNT(*) FROM users WHERE role = 'parent'";
+    const countParams = [];
+    if (search) {
+      countQuery += " AND (name ILIKE $1 OR email ILIKE $1)";
+      countParams.push(`%${search}%`);
+    }
+    const countResult = await db.query(countQuery, countParams);
+
+    res.json({
+      success: true,
+      count: parseInt(countResult.rows[0].count),
+      page: parseInt(page),
+      limit: parseInt(limit),
+      data: result.rows
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * @desc    Get all bookings with details
+ * @route   GET /api/admin/bookings
+ * @access  Private/Admin
+ */
+const getBookings = async (req, res, next) => {
+  try {
+    const { status, page = 1, limit = 10 } = req.query;
+    const offset = (page - 1) * limit;
+
+    let query = `
+      SELECT 
+        tb.*, 
+        u.name as parent_name, u.email as parent_email,
+        p.center_name as provider_name
+      FROM tour_bookings tb
+      JOIN users u ON tb.parent_id = u.id
+      JOIN providers p ON tb.provider_id = p.id
+    `;
+
+    const queryParams = [];
+    if (status && status !== 'all') {
+      query += ` WHERE tb.status = $1`;
+      queryParams.push(status);
+    }
+
+    query += ` ORDER BY tb.created_at DESC LIMIT ${queryParams.length + 1} OFFSET ${queryParams.length + 2}`;
+    queryParams.push(limit, offset);
+
+    const result = await db.query(query, queryParams);
+
+    // Get total count
+    let countQuery = 'SELECT COUNT(*) FROM tour_bookings';
+    const countParams = [];
+    if (status && status !== 'all') {
+      countQuery += ' WHERE status = $1';
+      countParams.push(status);
+    }
+    const countResult = await db.query(countQuery, countParams);
+
+    res.json({
+      success: true,
+      count: parseInt(countResult.rows[0].count),
+      page: parseInt(page),
+      limit: parseInt(limit),
+      data: result.rows
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * @desc    Get all provider subscriptions
+ * @route   GET /api/admin/subscriptions
+ * @access  Private/Admin
+ */
+const getSubscriptions = async (req, res, next) => {
+  try {
+    const { plan, page = 1, limit = 10 } = req.query;
+    const offset = (page - 1) * limit;
+
+    let query = `
+      SELECT 
+        ps.*, 
+        p.center_name as provider_name
+      FROM provider_subscriptions ps
+      JOIN providers p ON ps.provider_id = p.id
+    `;
+
+    const queryParams = [];
+    if (plan && plan !== 'all') {
+      query += ` WHERE ps.plan = $1`;
+      queryParams.push(plan);
+    }
+
+    query += ` ORDER BY ps.created_at DESC LIMIT ${queryParams.length + 1} OFFSET ${queryParams.length + 2}`;
+    queryParams.push(limit, offset);
+
+    const result = await db.query(query, queryParams);
+
+    // Get total count
+    let countQuery = 'SELECT COUNT(*) FROM provider_subscriptions';
+    const countParams = [];
+    if (plan && plan !== 'all') {
+      countQuery += ' WHERE plan = $1';
+      countParams.push(plan);
+    }
+    const countResult = await db.query(countQuery, countParams);
+
+    res.json({
+      success: true,
+      count: parseInt(countResult.rows[0].count),
+      page: parseInt(page),
+      limit: parseInt(limit),
+      data: result.rows
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   getProviders,
   flagProvider,
   getAnalytics,
-  deleteProvider
+  deleteProvider,
+  getParents,
+  getBookings,
+  getSubscriptions
 };

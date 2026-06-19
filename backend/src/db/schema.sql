@@ -24,6 +24,7 @@ CREATE TABLE IF NOT EXISTS providers (
     subsidy_accepted BOOLEAN DEFAULT FALSE,
     pricing_tier VARCHAR(20),
     is_active BOOLEAN DEFAULT TRUE,
+    views_count INTEGER DEFAULT 0,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
@@ -100,12 +101,13 @@ CREATE TABLE IF NOT EXISTS notifications (
 -- Provider Subscriptions Table
 CREATE TABLE IF NOT EXISTS provider_subscriptions (
     id SERIAL PRIMARY KEY,
-    provider_id INTEGER REFERENCES providers(id) ON DELETE CASCADE,
+    provider_id INTEGER REFERENCES providers(id) ON DELETE CASCADE UNIQUE,
     stripe_customer_id VARCHAR(255),
     stripe_subscription_id VARCHAR(255),
     plan VARCHAR(20) DEFAULT 'free',
     status VARCHAR(50),
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Engagement Logs Table for Analytics

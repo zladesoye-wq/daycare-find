@@ -20,6 +20,14 @@ const logEngagement = async (req, res, next) => {
       [user_id, provider_id, action_type, is_budget_pick || false]
     );
 
+    // Increment views_count if it's a view
+    if (action_type === 'view') {
+      await db.query(
+        'UPDATE providers SET views_count = views_count + 1 WHERE id = $1',
+        [provider_id]
+      );
+    }
+
     res.status(201).json({ success: true });
   } catch (error) {
     next(error);
