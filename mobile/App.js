@@ -8,6 +8,8 @@ import { DM_Sans_400Regular, DM_Sans_500Medium, DM_Sans_600SemiBold, DM_Sans_700
 import { AuthProvider } from './src/context/AuthContext';
 import RootNavigator from './src/navigation/RootNavigator';
 import { colors } from './src/theme';
+import { registerForPushNotifications } from './src/services/notifications';
+import { notificationApi } from './src/services/api';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -31,6 +33,18 @@ export default function App() {
       }
     }
     prepare();
+
+    // Register for push notifications on launch
+    (async () => {
+      try {
+        const token = await registerForPushNotifications();
+        if (token) {
+          await notificationApi.registerPushToken(token);
+        }
+      } catch (err) {
+        console.warn('Failed to register push token:', err);
+      }
+    })();
   }, []);
 
   const onLayoutRootView = useCallback(async () => {

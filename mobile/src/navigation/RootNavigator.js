@@ -3,7 +3,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { useAuth } from '../context/AuthContext';
 import AuthNavigator from './AuthNavigator';
 import ParentTabNavigator from './ParentTabNavigator';
-import ProviderTabNavigator from './ProviderTabNavigator';
+import ProviderRootStack from './ProviderRootStack';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import { colors } from '../theme';
 
@@ -19,7 +19,7 @@ export default function RootNavigator() {
       case 'parent':
         return <ParentTabNavigator />;
       case 'provider':
-        return <ProviderTabNavigator />;
+        return <ProviderRootStack />;
       case 'admin':
         // Admin could use a different navigator
         return <ParentTabNavigator />;

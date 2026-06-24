@@ -16,6 +16,7 @@ app.use('/api/bookings', require('./src/routes/bookings'));
 app.use('/api/payments', require('./src/routes/payments'));
 app.use('/api/admin', require('./src/routes/admin'));
 app.use('/api/analytics', require('./src/routes/analytics'));
+app.use('/api/notifications', require('./src/routes/notifications'));
 
 // Health check
 app.get('/health', (req, res) => {
