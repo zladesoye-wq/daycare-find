@@ -9,9 +9,11 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useFocusEffect } from '@react-navigation/native';
 import { colors, typography, spacing, borderRadius, shadows } from '../../theme';
 import { LoadingSpinner, EmptyState } from '../../components/common';
-import { bookingApi, providerApi } from '../../services/api';
+import NotificationBell from '../../components/common/NotificationBell';
+import { bookingApi, providerApi, notificationApi } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 
 export default function DashboardScreen({ navigation }) {
@@ -25,6 +27,7 @@ export default function DashboardScreen({ navigation }) {
     profileViews: 0,
   });
   const [recentActivity, setRecentActivity] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   const fetchData = useCallback(async () => {
     try {
@@ -79,6 +82,18 @@ export default function DashboardScreen({ navigation }) {
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
+  // Fetch unread notifications count on focus
+  useFocusEffect(
+    useCallback(() => {
+      (async () => {
+        try {
+          const res = await notificationApi.list({ limit: 1 });
+          setUnreadCount(res.data?.unread || 0);
+        } catch (err) { /* silent */ }
+      })();
+    }, [])
+  );
+
   const onRefresh = () => { setRefreshing(true); fetchData(); };
 
   const QuickAction = ({ icon, label, onPress, color }) => (
@@ -103,6 +118,10 @@ export default function DashboardScreen({ navigation }) {
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Dashboard</Text>
+        <NotificationBell
+          onPress={() => navigation.navigate('NotificationsList')}
+          unreadCount={unreadCount}
+        />
       </View>
       <ScrollView
         contentContainerStyle={styles.scrollContent}
@@ -165,7 +184,7 @@ export default function DashboardScreen({ navigation }) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
-  header: { backgroundColor: colors.primary, paddingHorizontal: spacing.lg, paddingVertical: spacing.md },
+  header: { backgroundColor: colors.primary, paddingHorizontal: spacing.lg, paddingVertical: spacing.md, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   headerTitle: { ...typography.h3, color: colors.white },
   scrollContent: { padding: spacing.lg, paddingBottom: spacing.xxl },
   statsRow: { flexDirection: 'row', gap: spacing.md, marginBottom: spacing.md },
