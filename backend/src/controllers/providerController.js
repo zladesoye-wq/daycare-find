@@ -259,10 +259,118 @@ const updatePricing = async (req, res, next) => {
   }
 };
 
+const getMyProvider = async (req, res, next) => {
+  try {
+    const providerResult = await db.query(
+      'SELECT p.*, pa.available_spots, pa.total_spots FROM providers p LEFT JOIN provider_availability pa ON p.id = pa.provider_id WHERE p.user_id = $1',
+      [req.user.id]
+    );
+
+    if (providerResult.rows.length === 0) {
+      return res.status(404).json({ message: 'Provider profile not found' });
+    }
+
+    const provider = providerResult.rows[0];
+    
+    const pricingResult = await db.query(
+      'SELECT * FROM provider_pricing WHERE provider_id = $1',
+      [provider.id]
+    );
+    provider.pricing = pricingResult.rows;
+
+    res.json({
+      success: true,
+      provider: provider
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const getMyProviderStats = async (req, res, next) => {
+  try {
+    const providerResult = await db.query('SELECT id FROM providers WHERE user_id = $1', [req.user.id]);
+    if (providerResult.rows.length === 0) {
+      return res.status(404).json({ message: 'Provider not found' });
+    }
+    const providerId = providerResult.rows[0].id;
+
+    const availabilityResult = await db.query(
+      'SELECT available_spots, total_spots FROM provider_availability WHERE provider_id = $1',
+      [providerId]
+    );
+
+    const bookingsResult = await db.query(
+      'SELECT COUNT(*) as total, SUM(CASE WHEN status = \'pending\' THEN 1 ELSE 0 END) as pending FROM tour_bookings WHERE provider_id = $1',
+      [providerId]
+    );
+
+    // Mock views for now
+    const views = 142;
+
+    res.json({
+      success: true,
+      stats: {
+        available_spots: availabilityResult.rows[0]?.available_spots || 0,
+        total_spots: availabilityResult.rows[0]?.total_spots || 0,
+        pending_bookings: parseInt(bookingsResult.rows[0]?.pending || 0),
+        total_bookings: parseInt(bookingsResult.rows[0]?.total || 0),
+        views
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const updateMyProvider = async (req, res, next) => {
+    try {
+        const providerResult = await db.query('SELECT id FROM providers WHERE user_id = $1', [req.user.id]);
+        if (providerResult.rows.length === 0) {
+            return res.status(404).json({ message: 'Provider not found' });
+        }
+        req.params.id = providerResult.rows[0].id;
+        return updateProvider(req, res, next);
+    } catch (error) {
+        next(error);
+    }
+};
+
+const updateMyAvailability = async (req, res, next) => {
+    try {
+        const providerResult = await db.query('SELECT id FROM providers WHERE user_id = $1', [req.user.id]);
+        if (providerResult.rows.length === 0) {
+            return res.status(404).json({ message: 'Provider not found' });
+        }
+        req.params.id = providerResult.rows[0].id;
+        return updateAvailability(req, res, next);
+    } catch (error) {
+        next(error);
+    }
+};
+
+const updateMyPricing = async (req, res, next) => {
+    try {
+        const providerResult = await db.query('SELECT id FROM providers WHERE user_id = $1', [req.user.id]);
+        if (providerResult.rows.length === 0) {
+            return res.status(404).json({ message: 'Provider not found' });
+        }
+        req.params.id = providerResult.rows[0].id;
+        return updatePricing(req, res, next);
+    } catch (error) {
+        next(error);
+    }
+};
+
 module.exports = {
   getProviders,
   getProviderById,
   updateProvider,
   updateAvailability,
-  updatePricing
+  updatePricing,
+  getMyProvider,
+  getMyProviderStats,
+  updateMyProvider,
+  updateMyAvailability,
+  updateMyPricing
 };

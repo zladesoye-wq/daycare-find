@@ -48,7 +48,7 @@ const createBooking = async (req, res, next) => {
 
 const getBookings = async (req, res, next) => {
   const { role, id: userId } = req.user;
-  const { status } = req.query;
+  const { status, limit } = req.query;
 
   try {
     let query = '';
@@ -78,12 +78,17 @@ const getBookings = async (req, res, next) => {
 
     query += ' ORDER BY b.tour_date ASC, b.tour_time ASC';
 
+    if (limit) {
+      params.push(limit);
+      query += ' LIMIT $' + params.length;
+    }
+
     const result = await db.query(query, params);
 
     res.json({
       success: true,
       count: result.rows.length,
-      data: result.rows
+      bookings: result.rows
     });
   } catch (error) {
     next(error);
